@@ -1,8 +1,9 @@
 import os
+import config
 
 sprokets_for_intermediate_assembly = {}
 # Import the input.txt file and read its contents
-with open('input.txt', 'r') as file:
+with open(config.input_file, 'r') as file:
     # Read just the first line of two integers separated by a space
     input_data = file.readline().strip()
     # Split into two integers
