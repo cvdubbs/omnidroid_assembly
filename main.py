@@ -1,4 +1,5 @@
-import os
+#import os
+import sys
 import config
 
 sprokets_for_intermediate_assembly = {}
@@ -22,42 +23,36 @@ with open(config.input_file, 'r') as file:
         num_sprockets = int(file.readline().strip())
         # Map of Assembly part number to the number of sprockets in the intermediate assembly
         sprokets_for_intermediate_assembly[j] = num_sprockets
-# Sort the dependencies so the second element of the tuple puts everything in descending order and following that, the first element of the tuple puts everything in descending order
-dependencies_sorted = sorted(dependencies,key=lambda x: (x[1], x[0]), reverse=True)
-# Dict where key is 0 to n-1 and value is the total number of pieces needed for that part in the assembly
-# Start with count of 0 for each key
-dict_total_nodes = {i: 0 for i in range(n)}
-dict_total_pieces = {i: 0 for i in range(n)}
-# These tuples assmeble a tree that we need the count of leafs and the total number of each part in the assembly. Starts with the highest integer in the second position of the tuple.
-# n-1 is always the head and will have a count of 1. The rest of the parts will have a count of 0. We will iterate through the sorted dependencies and for each dependency, 
-# we will increment the count of the first element only if the next element matches
 
-running_count = 1
-prev_dependency = dependencies_sorted[0]
-dict_total_nodes[prev_dependency[0]] = 1
-dict_total_nodes[prev_dependency[1]] = 1
-for dependency in dependencies_sorted[1:]:
-    if dict_total_nodes[dependency[0]] == 0:
-        dict_total_nodes[dependency[0]] = 1 * dict_total_nodes[dependency[1]]
-    else:
-        if dependency == prev_dependency:
-            running_count += 1
-            dict_total_nodes[dependency[0]] -= ((running_count -1) * dict_total_nodes[dependency[1]])
-            dict_total_nodes[dependency[0]] += running_count * dict_total_nodes[dependency[1]]
-        else:
-            running_count = 1
-            dict_total_nodes[dependency[0]] += 1 * dict_total_nodes[dependency[1]]
+# Set the recursion limit higher than n so the recursion does not stop early if the assembly chain of parts is very deep
+sys.setrecursionlimit(n + 1000)
 
-    prev_dependency = dependency
+# Dict where key is 0 to n-1 and value is the list of parts that are used directly to build that part
+req = {t: [] for t in range(n)}
+# For each dependency, part i is used in the assembly of part j, so we add part i to the list for part j. The same part can be used more than once so we keep the duplicates
+for i, j in dependencies:
+    req[j].append(i)
 
-# Now that we have the total nodes counted, just multiply the total number of pieces for each part in the assembly by the number of sprockets in the intermediate assembly for that part
-total_sprockets = 0
-for assembly_part in dict_total_nodes.keys():
-    dict_total_pieces[assembly_part] = dict_total_nodes[assembly_part] * sprokets_for_intermediate_assembly[assembly_part]
-    total_sprockets += dict_total_pieces[assembly_part]
-print("Total nodes for each part in the assembly:")
-print(dict_total_nodes)
-print("Total pieces for each part in the assembly:")
-print(dict_total_pieces)
-print("Total Sprockets for the entire assembly:")
-print(total_sprockets)
+# Dict where key is 0 to n-1 and value is the total number of sprockets needed to build that part including all the parts inside it. We store each part once we calculate it so we do not have to calculate it again every time the part is reused
+cost = {}
+
+def total_cost(t):
+    # If we already calculated this part, just return the stored value instead of calculating it again
+    if t in cost:
+        return cost[t]
+    # Start with the number of sprockets used to attach this part's own pieces together
+    running = sprokets_for_intermediate_assembly[t]
+    # For each part required to build this part, add on that part's total number of sprockets
+    for part in req[t]:
+        running += total_cost(part)
+    cost[t] = running
+    return running
+
+# This total is the number of sprockets for the whole assembly
+answer = total_cost(n - 1)
+
+# Write the total to output.txt
+with open('output.txt', 'w') as out:
+    out.write(str(answer))
+
+print(answer)
