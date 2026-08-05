@@ -7,7 +7,7 @@ sprokets_for_intermediate_assembly = {}
 with open(config.input_file, 'r') as file:
     # Read just the first line of two integers separated by a space
     input_data = file.readline().strip()
-    # Split into two integers
+    # Split into two integer
     input_data = list(map(int, input_data.split()))
     # Integers n and m, indicating the number of parts in the assembly and the number of assembly dependencies
     n, m = input_data
