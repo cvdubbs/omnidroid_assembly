@@ -37,7 +37,7 @@ for i, j in dependencies:
 cost = {}
 
 def total_cost(t):
-    # If we already calculated this part, just return the stored value instead of calculating it again
+    # If we already calculated this part,  just return the stored value instead of calculating it again
     if t in cost:
         return cost[t]
     # Start with the number of sprockets used to attach this part's own pieces together
